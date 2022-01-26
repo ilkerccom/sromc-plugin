@@ -3,6 +3,7 @@
 # https://sromobilecenter.com/
 
 
+from locale import getlocale
 from phBot import *
 import phBotChat
 import QtBind
@@ -10,6 +11,7 @@ import os
 import random
 import urllib.request
 import json
+from types import SimpleNamespace
 
 
 # Global Variables
@@ -21,6 +23,8 @@ appRunning = False
 accountCreated = False
 apiEndpoint = 'http://localhost:57893'
 apiRequests = 0
+taskCompleted = False
+messages = []
 
 
 # Create GUI
@@ -61,12 +65,12 @@ def showCode_click():
         server = str(char['server'])
         charName = str(char['name'])
         playerId = str(char['player_id'])
-        randomNumber = str(random.randint(100000, 999999))
+        randomNumber = str(random.randint(10000000, 99999999))
 
         # Create account and get userid
         if accountCreated == False:
             response = requestApi(
-                '/account/create', {'CharId': playerId, 'Server': server, 'CharName': charName, 'Password': randomNumber})
+                '/account/create', {'PlayerId': playerId, 'Server': server, 'CharName': charName, 'Password': randomNumber})
             _result = json.loads(response)
             userId = str(_result["charId"])
             randomPassword = str(randomNumber)
@@ -174,7 +178,7 @@ def isCharInGame():
 def handle_event(t, data):
     if t == 5:
         log('Rare item drop')
-    elif t == 6:
+    elif t == 4:
         log('Under attack by player')
     elif t == 7:
         log('Died')
@@ -182,9 +186,47 @@ def handle_event(t, data):
         log('Alhchemy completed')
 
 
-# Message received
+# Messages
+class Message:
+    def __init__(self, message, player, type):
+        self.message = message
+        self.player = player
+        self.type = type
+    def toDict(self):
+      return {"message": self.message, "player": self.player, "type": self.type}
+
+
+# Chat message received
 def handle_chat(t, player, msg):
-    log(t + ' / ' + msg)
+    global messages
+    max_messages = 100
+    message = str(msg)
+    type = str(messageType(t))
+    sender = str(player)
+    _m = Message(message, sender, type)
+    messages.append(_m.toDict())
+    if len(messages) > max_messages :
+        messages.pop(len(messages) - max_messages - 1)
+
+
+#Message type
+def messageType(type):
+    if type == 1:
+        return "all"
+    elif type == 2:
+        return "private"
+    elif type == 4:
+        return "party"
+    elif type == 5:
+        return "guild"
+    elif type == 6:
+        return "global"
+    elif type == 11:
+        return "union"
+    elif type == 16:
+        return "academy"
+    else:
+        return "all"
 
 
 # Send PM
@@ -215,7 +257,10 @@ def event_loop():
 def sendInfo():
     global appRunning
     global apiRequests
+    global taskCompleted
+    global messages
     if ((appRunning == True) and (isCharInGame() == True)):
+        game = str(get_locale())
         status = str(get_status())
         char = str(get_character_data())
         guild = str(get_guild())
@@ -229,23 +274,74 @@ def sendInfo():
         quests = str(get_quests())
         token = str(getToken())
         user_id = str(getUserId())
-        requestJson = '{ charId: "' + user_id + '", token: "' + token + '", status: "' + status + '", character: ' + char + ', inventory: ' + inventory + ', storage: ' + storage + \
-            ', drops: ' + drops + ', guild: ' + guild + ', party: ' + party + ', quests: ' + \
-            quests + ', monsters: ' + monsters + ', pets: ' + \
-            pets + ', academy: ' + academy + ' }'
+        _messages = str(messages)
+        requestJson = {
+            'charId': user_id,
+            'token': token,
+            'status': status,
+            'game': game,
+            'character': char,
+            'inventory': inventory,
+            'storage': storage,
+            'quests': quests,
+            'drops': drops,
+            'guild': guild,
+            'party': party,
+            'monsters': monsters,
+            'pets': pets,
+            'academy': academy,
+            'messages': _messages,
+            'taskCompleted': str(taskCompleted)
+        }
+
         toggleButtons()
         apiRequests += 1
         if apiRequests % 5 == 0:
-            log(requestJson)
             try:
-                response = requestApi('/charinfo/send', requestJson)
-                writeMessage('Data sent and received')
+                response = requestApi('/charinfo/create', requestJson)
+                hasTask = json.loads(response, object_hook=lambda d: SimpleNamespace(**d))
+                tasks = str(hasTask.tasks.command)
+                if tasks == "start_bot":
+                    start_bot()
+                    writeMessage("Task > Bot start")
+                elif tasks == "stop_bot":
+                    stop_bot()
+                    writeMessage("Task > Bot stop")
+                elif tasks == "set_training_radius":
+                    set_training_radius(float(hasTask.tasks.arg1))
+                    writeMessage("Task > Set training radius")
+                elif tasks == "set_training_position":
+                    set_training_position(0, float(hasTask.tasks.arg1), float(hasTask.tasks.arg2), float(hasTask.tasks.arg3))
+                    writeMessage("Task > Set training position")
+                elif tasks == "start_trace":
+                    start_trace(str(hasTask.tasks.arg1))
+                    writeMessage("Task > Start tracing (" + str(hasTask.tasks.arg1) + ")")
+                elif tasks == "stop_trace":
+                    stop_trace()
+                    writeMessage("Task > Stop tracing")
+                elif tasks == "move_to":
+                    move_to(float(hasTask.tasks.arg1), float(hasTask.tasks.arg2), 0)
+                    writeMessage("Task > Moving target X and Y")
+                elif tasks == "send_message":
+                    sendPM(str(hasTask.tasks.arg1), str(hasTask.tasks.arg2), str(hasTask.tasks.arg3))
+                    writeMessage("Task > Message sent. (" + hasTask.tasks.arg2 + ")")
+                elif tasks == "reverse_return":
+                    reverse_return(int(hasTask.tasks.arg1), str(hasTask.tasks.arg2))
+                    writeMessage("Task > Reverse scroll")
+                elif tasks == "disconnect":
+                    disconnect()
+                    writeMessage("Task > Disconnect from server")
+
+                if tasks != "":
+                    taskCompleted = True
+                else:
+                    taskCompleted = False
             except Exception as e:
                 writeMessage('API Error.' + str(e))
 
-            if apiRequests >= 50:
+            if apiRequests >= 60:
                 alreadyHave()
-            if apiRequests >= 100:
+                writeMessage('Data sent and received (' + user_id + '/' + token + ')')
                 apiRequests = 0
 
 
@@ -306,13 +402,3 @@ def toggleButtons():
 
 start()
 toggleButtons()
-
-# start_bot() // Start bot
-# stop_bot() // Stop bot
-# start_trace(char) // Trace a player
-# stop_trace() // Stops trace
-# set_training_position(0, 6400.0, 800.0, 0.0) // Region, x, y, z float
-# set_training_radius(50.0) // radius float
-# move_to(6400.0, 800.0, 0.0) // Move action x,y,z (z must 0)
-# start_script(script) // walk,6435,1087,-32, ... and runs script
-# stop_script() // Stops script
