@@ -1,6 +1,6 @@
 # SRO Mobile Center v0.93 - Plugin for phBot - Silkroad Online Game
 # Copyright ILKERC - Under MIT License
-# https://sromobilecenter.com/
+# https://sromc.com/
 
 
 from locale import getlocale
@@ -11,6 +11,9 @@ import os
 import random
 import urllib.request
 import json
+import struct
+import sqlite3
+from datetime import datetime
 from types import SimpleNamespace
 
 
@@ -21,9 +24,12 @@ appVersion = 'v0.93'
 appAuthor = 'ILKERC'
 appRunning = False
 accountCreated = False
-apiEndpoint = 'http://localhost:57893'
+apiEndpoint = 'https://api.sromc.com'
 apiRequests = 0
 taskCompleted = False
+deadCounter = 0
+itemCounter = 0
+rareItemCounter = 0
 messages = []
 
 
@@ -33,10 +39,10 @@ QtBind.createLabel(gui, '<b>' + appFullName + ' ' +
                    appVersion + '</b>', 10, 10)
 QtBind.createLabel(gui, '', 10, 40)
 QtBind.createLabel(
-    gui, 'Generate a pairing code with the button below and enter it in the mobile app. Visit <a href="https://sromobilecenter.com/">https://sromobilecenter.com</a>', 10, 40)
+    gui, 'Generate a character login info with the button below and enter it in the mobile app. Visit <a href="https://sromc.com/">https://sromc.com</a>', 10, 40)
 btnReset = QtBind.createButton(gui, 'reset_click', 'Reset and Stop', 10, 70)
 btnCreate = QtBind.createButton(
-    gui, 'showCode_click', 'Generate Pairing Code', 10, 70)
+    gui, 'showCode_click', 'Create Character', 10, 70)
 lblCode = QtBind.createLabel(gui, '', 10, 120)
 lblPassword = QtBind.createLabel(gui, '', 10, 140)
 lblCodeDesc = QtBind.createLabel(gui, '', 10, 180)
@@ -176,34 +182,41 @@ def isCharInGame():
 
 # Important events
 def handle_event(t, data):
+    global deadCounter
+    global itemCounter
+    global rareItemCounter
     if t == 5:
-        log('Rare item drop')
+       rareItemCounter += 1
     elif t == 4:
         log('Under attack by player')
+    elif t == 6:
+        itemCounter += 1
     elif t == 7:
-        log('Died')
-    elif t == 8:
-        log('Alhchemy completed')
+        deadCounter += 1
 
 
 # Messages
 class Message:
-    def __init__(self, message, player, type):
+    def __init__(self, message, player, type, typeInt, date):
         self.message = message
         self.player = player
         self.type = type
+        self.typeInt = typeInt
+        self.date = date
     def toDict(self):
-      return {"message": self.message, "player": self.player, "type": self.type}
+      return {"message": self.message, "player": self.player, "type": self.type, "typeInt": self.typeInt, "date": self.date}
 
 
 # Chat message received
 def handle_chat(t, player, msg):
     global messages
-    max_messages = 100
+    max_messages = 120
     message = str(msg)
+    message = urllib.parse.quote(message)
+    currentDate = datetime.now()
     type = str(messageType(t))
     sender = str(player)
-    _m = Message(message, sender, type)
+    _m = Message(message, sender, type, t, currentDate.strftime("%d/%m/%Y %H:%M:%S"))
     messages.append(_m.toDict())
     if len(messages) > max_messages :
         messages.pop(len(messages) - max_messages - 1)
@@ -215,12 +228,18 @@ def messageType(type):
         return "all"
     elif type == 2:
         return "private"
+    elif type == 3:
+        return "gm"
     elif type == 4:
         return "party"
     elif type == 5:
         return "guild"
     elif type == 6:
         return "global"
+    elif type == 7:
+        return "notice"
+    elif type == 9:
+        return "stall"
     elif type == 11:
         return "union"
     elif type == 16:
@@ -237,6 +256,10 @@ def sendPM(message, to, player):
         phBotChat.Guild(message)
     elif to == 'union':
         phBotChat.Union(message)
+    elif to == 'stall':
+        phBotChat.Stall(message)
+    elif to == 'global':
+        phBotChat.Global(message)
     elif to == 'private':
         phBotChat.Private(player, message)
     else:
@@ -251,6 +274,13 @@ def event_loop():
         appRunning = True
     else:
         appRunning = False
+        
+        
+def training_area():
+    t = str(get_training_area())
+    if t == "None":
+        t = "{'x': 0, 'y': 0, 'z': 0, 'region': 24305, 'path': '', 'radius': 0, 'pick_radius': 0}"
+    return t
 
 
 # Send info to api
@@ -259,19 +289,30 @@ def sendInfo():
     global apiRequests
     global taskCompleted
     global messages
+    global deadCounter
+    global itemCounter
+    global rareItemCounter
     if ((appRunning == True) and (isCharInGame() == True)):
+        char_data = get_character_data();
+        char_data_str = str(char_data);
+        char_data_str = char_data_str[:len(char_data_str)-1] + ", 'regionName':'" + get_zone_name(char_data['region']) + "', 'items': " + str(itemCounter) + ", 'rareItems': " + str(rareItemCounter) + ", 'trainingArea': " + str(training_area()) + ", 'dies': " + str(deadCounter) + " }"
         game = str(get_locale())
         status = str(get_status())
-        char = str(get_character_data())
+        char = char_data_str
         guild = str(get_guild())
+        guild_union = str(get_guild_union())
         party = str(get_party())
         inventory = str(get_inventory())
         storage = str(get_storage())
+        storage_guild = str(get_guild_storage())
         academy = str(get_academy())
         pets = str(get_pets())
+        players = str(get_players())
+        taxi = str(get_taxi())
         monsters = str(get_monsters())
         drops = str(get_drops())
         quests = str(get_quests())
+        skills = str(get_active_skills())
         token = str(getToken())
         user_id = str(getUserId())
         _messages = str(messages)
@@ -283,12 +324,17 @@ def sendInfo():
             'character': char,
             'inventory': inventory,
             'storage': storage,
+            'storage_guild': storage_guild,
             'quests': quests,
             'drops': drops,
             'guild': guild,
+            'guild_union': guild_union,
             'party': party,
+            'taxi': taxi,
             'monsters': monsters,
             'pets': pets,
+            'skills': skills,
+            'players': players,
             'academy': academy,
             'messages': _messages,
             'taskCompleted': str(taskCompleted)
@@ -319,11 +365,39 @@ def sendInfo():
                 elif tasks == "stop_trace":
                     stop_trace()
                     writeMessage("Task > Stop tracing")
+                elif tasks == "guild_invite":
+                    isSuccess = phBotChat.Private(str(hasTask.tasks.arg1), "Guild")
+                    data = b'\x08\x00'
+                    for c in str(hasTask.tasks.arg1):
+                        data += struct.pack('b', ord(c))
+                    if isSuccess:
+                        inject_joymax(0x70F3, data, False)
+                        writeMessage("Task > Invite guild")
+                elif tasks == "guild_kick":
+                    isSuccess = phBotChat.Private(str(hasTask.tasks.arg1), "Guild")
+                    data = b'\x08\x00'
+                    for c in str(hasTask.tasks.arg1):
+                        data += struct.pack('b', ord(c))
+                    if isSuccess:
+                        inject_joymax(0x70F4, data, False)
+                        writeMessage("Task > Kick from guild")
+                elif tasks == "leave_party":
+                    if get_party():
+                        inject_joymax(0x7061, b'', False)
+                        writeMessage("Task > Leave from party")
                 elif tasks == "move_to":
                     move_to(float(hasTask.tasks.arg1), float(hasTask.tasks.arg2), 0)
                     writeMessage("Task > Moving target X and Y")
                 elif tasks == "send_message":
                     sendPM(str(hasTask.tasks.arg1), str(hasTask.tasks.arg2), str(hasTask.tasks.arg3))
+                    if str(hasTask.tasks.arg2) == "private":
+                        charName = str(char_data['name'])
+                        toCharName = str(hasTask.tasks.arg3)
+                        message = str(hasTask.tasks.arg1)
+                        message = urllib.parse.quote(message)
+                        currentDate = datetime.now()
+                        _m = Message(str(message), charName + "|" + toCharName, str("private"), 2, currentDate.strftime("%d/%m/%Y %H:%M:%S"))
+                        messages.append(_m.toDict())
                     writeMessage("Task > Message sent. (" + hasTask.tasks.arg2 + ")")
                 elif tasks == "reverse_return":
                     reverse_return(int(hasTask.tasks.arg1), str(hasTask.tasks.arg2))
@@ -341,15 +415,22 @@ def sendInfo():
 
             if apiRequests >= 60:
                 alreadyHave()
-                writeMessage('Data sent and received (' + user_id + '/' + token + ')')
+                writeMessage('Data sent and received (' + user_id + ')')
                 apiRequests = 0
 
 
-# Disconnected from gamme
+# Disconnected from game
 def disconnected():
     global appRunning
     appRunning = False
     writeMessage('Disconnected from game')
+    
+
+# Finished
+def finished():
+    global appRunning
+    appRunning = False
+    writeMessage('Exit from SROMC')
 
 
 # Request API
@@ -357,6 +438,7 @@ def requestApi(path, _data):
     headers = {
         "Content-Type": "application/json",
         "Accept": "application/json",
+        "User-Agent": "Mozilla/5.0",
     }
     data = json.dumps(_data).encode("utf-8")
     req = urllib.request.Request(apiEndpoint + path, data, headers)
@@ -387,6 +469,14 @@ def start():
         appRunning = False
 
 
+# Get .db3 file for game locale
+def getDBFile():
+    bot_path = os.getcwd()
+    locale = get_locale()
+    if locale == 56:
+        return bot_path + "/Data/TRSRO.db3"
+    
+
 # Toggle buttons on click
 def toggleButtons():
     if accountCreatedBefore() == True:
@@ -402,3 +492,8 @@ def toggleButtons():
 
 start()
 toggleButtons()
+
+# WARNING
+# If you want to edit this code, read carefully. 
+# There are some limits we set for storing data. 
+# If you make any changes above these limits, your character will be banned from the system and you will not be able to use it again.
