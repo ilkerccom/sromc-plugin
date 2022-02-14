@@ -195,6 +195,12 @@ def handle_event(t, data):
         deadCounter += 1
 
 
+# Test
+def handle_joymax(opcode, data):
+    if opcode == 0xB504:
+        log(data)
+
+
 # Messages
 class Message:
     def __init__(self, message, player, type, typeInt, date):
@@ -362,11 +368,20 @@ def sendInfo():
                 elif tasks == "start_trace":
                     start_trace(str(hasTask.tasks.arg1))
                     writeMessage("Task > Start tracing (" + str(hasTask.tasks.arg1) + ")")
+                elif tasks == "start_script":
+                    start_script(str(hasTask.tasks.arg1))
+                    writeMessage("Task > Start script")
+                elif tasks == "stop_script":
+                    stop_script()
+                    writeMessage("Task > Stop script")
                 elif tasks == "stop_trace":
                     stop_trace()
                     writeMessage("Task > Stop tracing")
+                elif tasks == "send_global":
+                    sendPM(str(hasTask.tasks.arg1), 'global', '')
+                    writeMessage("Task > Sent global message")
                 elif tasks == "guild_invite":
-                    isSuccess = phBotChat.Private(str(hasTask.tasks.arg1), "Guild")
+                    isSuccess = phBotChat.Private(str(hasTask.tasks.arg1), str(hasTask.tasks.arg2))
                     data = b'\x08\x00'
                     for c in str(hasTask.tasks.arg1):
                         data += struct.pack('b', ord(c))
@@ -374,7 +389,7 @@ def sendInfo():
                         inject_joymax(0x70F3, data, False)
                         writeMessage("Task > Invite guild")
                 elif tasks == "guild_kick":
-                    isSuccess = phBotChat.Private(str(hasTask.tasks.arg1), "Guild")
+                    isSuccess = phBotChat.Private(str(hasTask.tasks.arg1), str(hasTask.tasks.arg2))
                     data = b'\x08\x00'
                     for c in str(hasTask.tasks.arg1):
                         data += struct.pack('b', ord(c))
