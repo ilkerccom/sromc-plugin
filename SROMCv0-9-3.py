@@ -12,6 +12,7 @@ import random
 import urllib.request
 import json
 import struct
+import string
 import sqlite3
 from datetime import datetime
 from types import SimpleNamespace
@@ -71,7 +72,7 @@ def showCode_click():
         server = str(char['server'])
         charName = str(char['name'])
         playerId = str(char['player_id'])
-        randomNumber = str(random.randint(10000000, 99999999))
+        randomNumber = str(get_random_string())
 
         # Create account and get userid
         if accountCreated == False:
@@ -117,6 +118,11 @@ def alreadyHave():
     QtBind.setText(gui, lblCodeDesc,
                    'You have already created a user account.')
 
+# Random password
+def get_random_string():
+    letters = string.ascii_letters + string.digits
+    result_str = ''.join(random.choice(letters) for i in range(12))
+    return result_str
 
 # If account created before, get user id
 def getUserId():
