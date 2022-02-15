@@ -26,6 +26,7 @@ SROMC carries all the necessary data about your character to your mobile phone. 
   - Set custom script and start/stop
   - Send global messages
   - Disconnect game
+- Everything in one file. It doesn't need any extra library.
 
 
 ## App Images
@@ -77,6 +78,8 @@ Now your character will be paired with the mobile application.
 - If you are having trouble retrieving character data, use **"Reset and Stop"** in the plugin screen. This will change the character password and token information again. In this case, **you don't need** to match your character again.
 - If your character **does not send data to the server for 5 minutes**; There will be "No connection" information in the mobile application. In this case, you may not see the character information in the mobile application.
 - Each character can be matched with only one mobile app account.
+- Create an issue for the problems and issues you are experiencing. You can also create an issue for the new features you want.
+- Always download the latest version of the plugin from Github (https://github.com/ilkerccom/sromc-plugin). Also get the mobile apps from the store. We never share ".apk" style app installer files.
 
 ## Donate
 
