@@ -41,7 +41,7 @@ SROMC carries all the necessary data about your character to your mobile phone. 
 
 ## Installation
 
-**First,**
+**Step [1]**
 
 [Download SROMC plugin](https://github.com/ilkerccom/sromc-plugin) file from Github.
 
@@ -50,27 +50,35 @@ SROMC carries all the necessary data about your character to your mobile phone. 
 
 <a href="https://sromc.com"><img src="https://upload.wikimedia.org/wikipedia/commons/thumb/7/78/Google_Play_Store_badge_EN.svg/2560px-Google_Play_Store_badge_EN.svg.png" width="200"/></a> | <a href="https://sromc.com"><img src="https://upload.wikimedia.org/wikipedia/commons/thumb/3/3c/Download_on_the_App_Store_Badge.svg/2560px-Download_on_the_App_Store_Badge.svg.png" width="200"/></a>
 
-**Then,**
+**Step [2]**
 
 Copy the plugin file (SROMCv0-9-3.py) to the folder specified below.
 
 ``` C:\Users\{YOUR_USER_NAME}\AppData\Local\Programs\phBot Testing\Plugins ```
 
-**Then,**
+**Step [3]**
 
 In the phBot app, go to the **"Plugins"** section and the **"Reload"** button.
 
-**Then,**
+**Step [4]**
 
 Switch to the tab named SROMC. Click the **"Create Character"** button. This will create a simple account for your character on the server.
 
-**Then,**
+**Step [5]**
 
-**"Character ID"** and **"Password"** will appear on the screen. Enter this information on the **"Add Character"** screen in the **mobile app** (iOS or Androd).
+**"Character ID"** and **"Password"** will appear on the screen. Enter this information on the **"Add Character"** screen in the **mobile app** (iOS or Android).
 
 **That's all**
 
 Now your character will be paired with the mobile application.
+
+## Mobile App Hits
+
+**Map:** If you hold down on a certain point on the map, your character will move to that point. The white circle on the map indicates the size of the training area radius.
+
+**Messages:** To send someone a private message, just click on it. You can edit the player name to which the message will go, by clicking on it.
+
+**Actions:** Allow 3-5 seconds for a command you sent to reflect in the game. To teleport to a party member, you need to be at a party. The "Disconnect game" command requires an extra confirmation. When you use this command, if your "Manager" settings have been made, the character will re-enter the game in 2-3 minutes.
 
 
 ## Notes
@@ -78,8 +86,10 @@ Now your character will be paired with the mobile application.
 - If you are having trouble retrieving character data, use **"Reset and Stop"** in the plugin screen. This will change the character password and token information again. In this case, **you don't need** to match your character again.
 - If your character **does not send data to the server for 5 minutes**; There will be "No connection" information in the mobile application. In this case, you may not see the character information in the mobile application.
 - Each character can be matched with only one mobile app account.
+- Message data is cleared each time the character enters the game.
 - Create an issue for the problems and issues you are experiencing. You can also create an issue for the new features you want.
 - Always download the latest version of the plugin from Github (https://github.com/ilkerccom/sromc-plugin). Also get the mobile apps from the store. We never share ".apk" style app installer files.
+- **Please keep it in mind; sensitive data such as character login information is _never sent_ to the server. _Do not share_ the files created by the plugin, "Char ID", "Char Pass" and "Token" information with anyone.**
 
 ## Donate
 
