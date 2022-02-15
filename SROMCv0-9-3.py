@@ -469,7 +469,7 @@ def requestApi(path, _data):
 
 
 # Connected to game
-def connected():
+def joined_game():
     global appRunning
     appRunning = True
     writeMessage('Connected to game')
