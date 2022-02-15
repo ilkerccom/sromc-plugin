@@ -4,16 +4,14 @@
 
 SROMC carries all the necessary data about your character to your mobile phone. You can also use simple bot functions.
 
-## Features
-
-We now carry Silkroad Online® control into your mobile phone.
+## Features
 
 - Multiple character management
 - General character status, current position on the map, active skills.
 - Party, guild, union, private, global messages. Instant messaging
 - Instant taxi status if you are taxiing.
 - Easily view character inventory, storage, guild storage and picker pet items
-- View members with simple academy tracking
+- View members of academy
 - Party and taxi information. Party leave function
 - Guild and Union information. View online members.
 - Easily track your quests.
@@ -46,6 +44,11 @@ We now carry Silkroad Online® control into your mobile phone.
 
 [Download SROMC plugin](https://github.com/ilkerccom/sromc-plugin) file from Github.
 
+[Download Android App](https://sromc.com) or [Download iOS App](https://sromc.com) from store.
+
+
+<a href="https://sromc.com"><img src="https://upload.wikimedia.org/wikipedia/commons/thumb/7/78/Google_Play_Store_badge_EN.svg/2560px-Google_Play_Store_badge_EN.svg.png" width="200"/></a> | <a href="https://sromc.com"><img src="https://upload.wikimedia.org/wikipedia/commons/thumb/3/3c/Download_on_the_App_Store_Badge.svg/2560px-Download_on_the_App_Store_Badge.svg.png" width="200"/></a>
+
 **Then,**
 
 Copy the plugin file (SROMCv0-9-3.py) to the folder specified below.
@@ -73,3 +76,12 @@ Now your character will be paired with the mobile application.
 
 - If you are having trouble retrieving character data, use **"Reset and Stop"** in the plugin screen. This will change the character password and token information again. In this case, **you don't need** to match your character again.
 - If your character **does not send data to the server for 5 minutes**; There will be "No connection" information in the mobile application. In this case, you may not see the character information in the mobile application.
+- Each character can be matched with only one mobile app account.
+
+## Donate
+
+The plugin and the mobile application are completely free. It also contains no ads. If you like it, you can support the project with a donation.
+
+**Donate with Bitcoin (BTC)**
+
+    1eosEvvesKV6C2ka4RDNZhmepm1TLFBtw
