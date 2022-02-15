@@ -201,11 +201,6 @@ def handle_event(t, data):
         deadCounter += 1
 
 
-# Test
-def handle_joymax(opcode, data):
-    if opcode == 0xB504:
-        log(data)
-
 
 # Messages
 class Message:
