@@ -45,10 +45,10 @@ SROMC carries all the necessary data about your character to your mobile phone. 
 
 [Download SROMC plugin](https://github.com/ilkerccom/sromc-plugin) file from Github.
 
-[Download Android App](https://sromc.com) or [Download iOS App](https://sromc.com) from store.
+[Download Android App](https://play.google.com/store/apps/details?id=com.sromc) or [Download iOS App](https://apps.apple.com/tr/app/sromc/id1608640199) from store.
 
 
-<a href="https://sromc.com"><img src="https://upload.wikimedia.org/wikipedia/commons/thumb/7/78/Google_Play_Store_badge_EN.svg/2560px-Google_Play_Store_badge_EN.svg.png" width="200"/></a> | <a href="https://sromc.com"><img src="https://upload.wikimedia.org/wikipedia/commons/thumb/3/3c/Download_on_the_App_Store_Badge.svg/2560px-Download_on_the_App_Store_Badge.svg.png" width="200"/></a>
+<a href="https://play.google.com/store/apps/details?id=com.sromc"><img src="https://upload.wikimedia.org/wikipedia/commons/thumb/7/78/Google_Play_Store_badge_EN.svg/2560px-Google_Play_Store_badge_EN.svg.png" width="200"/></a> | <a href="https://apps.apple.com/tr/app/sromc/id1608640199"><img src="https://upload.wikimedia.org/wikipedia/commons/thumb/3/3c/Download_on_the_App_Store_Badge.svg/2560px-Download_on_the_App_Store_Badge.svg.png" width="200"/></a>
 
 **Step [2]**
 
