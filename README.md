@@ -52,7 +52,7 @@ SROMC carries all the necessary data about your character to your mobile phone. 
 
 **Step [2]**
 
-Copy the plugin file (SROMCv0-9-3.py) to the folder specified below.
+Copy the plugin file (SROMCv0-9-4.py) to the folder specified below.
 
 ``` C:\Users\{YOUR_USER_NAME}\AppData\Local\Programs\phBot Testing\Plugins ```
 
