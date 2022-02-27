@@ -1,4 +1,4 @@
-# SRO Mobile Center v0.93 - Plugin for phBot - Silkroad Online Game
+# SRO Mobile Center v0.94 - Plugin for phBot - Silkroad Online Game
 # Copyright ILKERC - Under MIT License
 # https://sromc.com/
 
@@ -14,6 +14,7 @@ import json
 import struct
 import string
 import sqlite3
+import time
 from datetime import datetime
 from types import SimpleNamespace
 
@@ -21,7 +22,7 @@ from types import SimpleNamespace
 # Global Variables
 appName = 'SROMC'
 appFullName = 'SRO Mobile Center'
-appVersion = 'v0.93'
+appVersion = 'v0.94'
 appAuthor = 'ILKERC'
 appRunning = False
 accountCreated = False
@@ -31,6 +32,7 @@ taskCompleted = False
 deadCounter = 0
 itemCounter = 0
 rareItemCounter = 0
+appUsing = False
 messages = []
 
 
@@ -299,140 +301,158 @@ def sendInfo():
     global deadCounter
     global itemCounter
     global rareItemCounter
-    if ((appRunning == True) and (isCharInGame() == True)):
-        char_data = get_character_data();
-        char_data_str = str(char_data);
-        char_data_str = char_data_str[:len(char_data_str)-1] + ", 'regionName':'" + get_zone_name(char_data['region']) + "', 'items': " + str(itemCounter) + ", 'rareItems': " + str(rareItemCounter) + ", 'trainingArea': " + str(training_area()) + ", 'dies': " + str(deadCounter) + " }"
-        game = str(get_locale())
-        status = str(get_status())
-        char = char_data_str
-        guild = str(get_guild())
-        guild_union = str(get_guild_union())
-        party = str(get_party())
-        inventory = str(get_inventory())
-        storage = str(get_storage())
-        storage_guild = str(get_guild_storage())
-        academy = str(get_academy())
-        pets = str(get_pets())
-        players = str(get_players())
-        taxi = str(get_taxi())
-        monsters = str(get_monsters())
-        drops = str(get_drops())
-        quests = str(get_quests())
-        skills = str(get_active_skills())
-        token = str(getToken())
-        user_id = str(getUserId())
-        _messages = str(messages)
-        requestJson = {
-            'charId': user_id,
-            'token': token,
-            'status': status,
-            'game': game,
-            'character': char,
-            'inventory': inventory,
-            'storage': storage,
-            'storage_guild': storage_guild,
-            'quests': quests,
-            'drops': drops,
-            'guild': guild,
-            'guild_union': guild_union,
-            'party': party,
-            'taxi': taxi,
-            'monsters': monsters,
-            'pets': pets,
-            'skills': skills,
-            'players': players,
-            'academy': academy,
-            'messages': _messages,
-            'taskCompleted': str(taskCompleted)
-        }
+    global appUsing
+    apiRequests += 1
+    if ((appRunning == True) and (isCharInGame() == True) and (apiRequests % 5 == 0)):
+        if apiRequests >= 60:
+            alreadyHave()
+            apiRequests = 0
+            if appUsing == True:
+                writeMessage('Data sent successfully. (Power mode)')
+            else:
+                writeMessage('Data sent successfully. (Sleep mode)')
+        if(appUsing == True):
+            char_data = get_character_data();
+            char_data_str = str(char_data);
+            char_data_str = char_data_str[:len(char_data_str)-1] + ", 'regionName':'" + get_zone_name(char_data['region']) + "', 'items': " + str(itemCounter) + ", 'rareItems': " + str(rareItemCounter) + ", 'trainingArea': " + str(training_area()) + ", 'dies': " + str(deadCounter) + " }"
+            game = str(get_locale())
+            status = str(get_status())
+            char = char_data_str
+            guild = str(get_guild())
+            guild_union = str(get_guild_union())
+            party = str(get_party())
+            inventory = str(get_inventory())
+            storage = str(get_storage())
+            storage_guild = str(get_guild_storage())
+            academy = str(get_academy())
+            pets = str(get_pets())
+            players = str(get_players())
+            taxi = str(get_taxi())
+            monsters = str(get_monsters())
+            drops = str(get_drops())
+            quests = str(get_quests())
+            skills = str(get_active_skills())
+            token = str(getToken())
+            user_id = str(getUserId())
+            _messages = str(messages)
+            requestJson = {
+                'charId': user_id,
+                'token': token,
+                'status': status,
+                'game': game,
+                'character': char,
+                'inventory': inventory,
+                'storage': storage,
+                'storage_guild': storage_guild,
+                'quests': quests,
+                'drops': drops,
+                'guild': guild,
+                'guild_union': guild_union,
+                'party': party,
+                'taxi': taxi,
+                'monsters': monsters,
+                'pets': pets,
+                'skills': skills,
+                'players': players,
+                'academy': academy,
+                'messages': _messages,
+                'taskCompleted': str(taskCompleted)
+            }
+        else:
+            requestJson = {
+                'charId': str(getUserId()),
+                'token': str(getToken()),
+                'status': str(get_status())
+            }
 
         toggleButtons()
-        apiRequests += 1
-        if apiRequests % 5 == 0:
-            try:
-                response = requestApi('/charinfo/create', requestJson)
-                hasTask = json.loads(response, object_hook=lambda d: SimpleNamespace(**d))
-                tasks = str(hasTask.tasks.command)
-                if tasks == "start_bot":
-                    start_bot()
-                    writeMessage("Task > Bot start")
-                elif tasks == "stop_bot":
-                    stop_bot()
-                    writeMessage("Task > Bot stop")
-                elif tasks == "set_training_radius":
-                    set_training_radius(float(hasTask.tasks.arg1))
-                    writeMessage("Task > Set training radius")
-                elif tasks == "set_training_position":
-                    set_training_position(0, float(hasTask.tasks.arg1), float(hasTask.tasks.arg2), float(hasTask.tasks.arg3))
-                    writeMessage("Task > Set training position")
-                elif tasks == "start_trace":
-                    start_trace(str(hasTask.tasks.arg1))
-                    writeMessage("Task > Start tracing (" + str(hasTask.tasks.arg1) + ")")
-                elif tasks == "start_script":
-                    start_script(str(hasTask.tasks.arg1))
-                    writeMessage("Task > Start script")
-                elif tasks == "stop_script":
-                    stop_script()
-                    writeMessage("Task > Stop script")
-                elif tasks == "stop_trace":
-                    stop_trace()
-                    writeMessage("Task > Stop tracing")
-                elif tasks == "send_global":
-                    sendPM(str(hasTask.tasks.arg1), 'global', '')
-                    writeMessage("Task > Sent global message")
-                elif tasks == "guild_invite":
-                    isSuccess = phBotChat.Private(str(hasTask.tasks.arg1), str(hasTask.tasks.arg2))
-                    data = b'\x08\x00'
-                    for c in str(hasTask.tasks.arg1):
-                        data += struct.pack('b', ord(c))
-                    if isSuccess:
-                        inject_joymax(0x70F3, data, False)
-                        writeMessage("Task > Invite guild")
-                elif tasks == "guild_kick":
-                    isSuccess = phBotChat.Private(str(hasTask.tasks.arg1), str(hasTask.tasks.arg2))
-                    data = b'\x08\x00'
-                    for c in str(hasTask.tasks.arg1):
-                        data += struct.pack('b', ord(c))
-                    if isSuccess:
-                        inject_joymax(0x70F4, data, False)
-                        writeMessage("Task > Kick from guild")
-                elif tasks == "leave_party":
-                    if get_party():
-                        inject_joymax(0x7061, b'', False)
-                        writeMessage("Task > Leave from party")
-                elif tasks == "move_to":
-                    move_to(float(hasTask.tasks.arg1), float(hasTask.tasks.arg2), 0)
-                    writeMessage("Task > Moving target X and Y")
-                elif tasks == "send_message":
-                    sendPM(str(hasTask.tasks.arg1), str(hasTask.tasks.arg2), str(hasTask.tasks.arg3))
-                    if str(hasTask.tasks.arg2) == "private":
-                        charName = str(char_data['name'])
-                        toCharName = str(hasTask.tasks.arg3)
-                        message = str(hasTask.tasks.arg1)
-                        message = urllib.parse.quote(message)
-                        currentDate = datetime.now()
-                        _m = Message(str(message), charName + "|" + toCharName, str("private"), 2, currentDate.strftime("%d/%m/%Y %H:%M:%S"))
-                        messages.append(_m.toDict())
-                    writeMessage("Task > Message sent. (" + hasTask.tasks.arg2 + ")")
-                elif tasks == "reverse_return":
-                    reverse_return(int(hasTask.tasks.arg1), str(hasTask.tasks.arg2))
-                    writeMessage("Task > Reverse scroll")
-                elif tasks == "disconnect":
-                    disconnect()
-                    writeMessage("Task > Disconnect from server")
+        
+        try:
+            response = requestApi('/charinfo/create', requestJson)
+            hasTask = json.loads(response, object_hook=lambda d: SimpleNamespace(**d))
+            tasks = str(hasTask.tasks.command)
+            lastActionUTCDate = datetime.fromisoformat(str(hasTask.mobileLastActionDate))
+            currentUTCDate = datetime.utcnow()
+            seconds = (currentUTCDate - lastActionUTCDate).total_seconds()
+            if seconds >= 30:
+                appUsing = False
+            else:
+                appUsing = True
+                
+            if tasks == "start_bot":
+                start_bot()
+                writeMessage("Task > Bot start")
+            elif tasks == "stop_bot":
+                stop_bot()
+                writeMessage("Task > Bot stop")
+            elif tasks == "set_training_radius":
+                set_training_radius(float(hasTask.tasks.arg1))
+                writeMessage("Task > Set training radius")
+            elif tasks == "set_training_position":
+                set_training_position(0, float(hasTask.tasks.arg1), float(hasTask.tasks.arg2), float(hasTask.tasks.arg3))
+                writeMessage("Task > Set training position")
+            elif tasks == "start_trace":
+                start_trace(str(hasTask.tasks.arg1))
+                writeMessage("Task > Start tracing (" + str(hasTask.tasks.arg1) + ")")
+            elif tasks == "start_script":
+                start_script(str(hasTask.tasks.arg1))
+                writeMessage("Task > Start script")
+            elif tasks == "stop_script":
+                stop_script()
+                writeMessage("Task > Stop script")
+            elif tasks == "stop_trace":
+                stop_trace()
+                writeMessage("Task > Stop tracing")
+            elif tasks == "send_global":
+                sendPM(str(hasTask.tasks.arg1), 'global', '')
+                writeMessage("Task > Sent global message")
+            elif tasks == "guild_invite":
+                isSuccess = phBotChat.Private(str(hasTask.tasks.arg1), str(hasTask.tasks.arg2))
+                data = b'\x08\x00'
+                for c in str(hasTask.tasks.arg1):
+                    data += struct.pack('b', ord(c))
+                if isSuccess:
+                    inject_joymax(0x70F3, data, False)
+                    writeMessage("Task > Invite guild")
+            elif tasks == "guild_kick":
+                isSuccess = phBotChat.Private(str(hasTask.tasks.arg1), str(hasTask.tasks.arg2))
+                data = b'\x08\x00'
+                for c in str(hasTask.tasks.arg1):
+                    data += struct.pack('b', ord(c))
+                if isSuccess:
+                    inject_joymax(0x70F4, data, False)
+                    writeMessage("Task > Kick from guild")
+            elif tasks == "leave_party":
+                if get_party():
+                    inject_joymax(0x7061, b'', False)
+                    writeMessage("Task > Leave from party")
+            elif tasks == "move_to":
+                move_to(float(hasTask.tasks.arg1), float(hasTask.tasks.arg2), 0)
+                writeMessage("Task > Moving target X and Y")
+            elif tasks == "send_message":
+                sendPM(str(hasTask.tasks.arg1), str(hasTask.tasks.arg2), str(hasTask.tasks.arg3))
+                if str(hasTask.tasks.arg2) == "private":
+                    charName = str(char_data['name'])
+                    toCharName = str(hasTask.tasks.arg3)
+                    message = str(hasTask.tasks.arg1)
+                    message = urllib.parse.quote(message)
+                    currentDate = datetime.now()
+                    _m = Message(str(message), charName + "|" + toCharName, str("private"), 2, currentDate.strftime("%d/%m/%Y %H:%M:%S"))
+                    messages.append(_m.toDict())
+                writeMessage("Task > Message sent. (" + hasTask.tasks.arg2 + ")")
+            elif tasks == "reverse_return":
+                reverse_return(int(hasTask.tasks.arg1), str(hasTask.tasks.arg2))
+                writeMessage("Task > Reverse scroll")
+            elif tasks == "disconnect":
+                disconnect()
+                writeMessage("Task > Disconnect from server")
 
-                if tasks != "":
-                    taskCompleted = True
-                else:
-                    taskCompleted = False
-            except Exception as e:
-                writeMessage('API Error.' + str(e))
-
-            if apiRequests >= 60:
-                alreadyHave()
-                writeMessage('Data sent and received (' + user_id + ')')
-                apiRequests = 0
+            if tasks != "":
+                taskCompleted = True
+            else:
+                taskCompleted = False
+        except Exception as e:
+            writeMessage('API Error.' + str(e))
 
 
 # Disconnected from game
@@ -491,7 +511,8 @@ def getDBFile():
     locale = get_locale()
     if locale == 56:
         return bot_path + "/Data/TRSRO.db3"
-    
+        
+   
 
 # Toggle buttons on click
 def toggleButtons():
