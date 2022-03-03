@@ -1,4 +1,4 @@
-# SRO Mobile Center v0.94 - Plugin for phBot - Silkroad Online Game
+# SRO Mobile Center v0.95 - Plugin for phBot - Silkroad Online Game
 # Copyright ILKERC - Under MIT License
 # https://sromc.com/
 
@@ -22,7 +22,7 @@ from types import SimpleNamespace
 # Global Variables
 appName = 'SROMC'
 appFullName = 'SRO Mobile Center'
-appVersion = 'v0.94'
+appVersion = 'v0.95'
 appAuthor = 'ILKERC'
 appRunning = False
 accountCreated = False
@@ -55,6 +55,7 @@ lblCodeDesc = QtBind.createLabel(gui, '', 10, 180)
 def showCode_click():
     global accountCreated
     global appRunning
+    global appUsing
     global apiRequests
     char = get_character_data()
     status = get_status()
@@ -94,6 +95,7 @@ def showCode_click():
             writeMessage('New account successfuly created. (' +
                          server + '/' + charName + ')')
             appRunning = True
+            appUsing = True
         else:
             alreadyHave()
 
@@ -505,7 +507,7 @@ def start():
         appRunning = False
 
 
-# Get .db3 file for game locale
+# Get .db3 file for game locale
 def getDBFile():
     bot_path = os.getcwd()
     locale = get_locale()
